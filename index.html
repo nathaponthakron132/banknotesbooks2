@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กระดานประมูล ธนบัตร เหรียญ ที่ระลึก หนังสือ รหัส N2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDuPA9Pn1YcHPVWwBPE-L6gMpTUR1yomBk",
+            authDomain: "photo-gallery-52d9b.firebaseapp.com",
+            projectId: "photo-gallery-52d9b",
+            storageBucket: "photo-gallery-52d9b.firebasestorage.app",
+            messagingSenderId: "324882656404",
+            appId: "1:324882656404:web:38d1fa39874782b691d881"
+          };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.firestoreDoc = doc;
+        window.firestoreSetDoc = setDoc;
+        window.firestoreGetDoc = getDoc;
+        window.firestoreOnSnapshot = onSnapshot;
+        window.firestoreUpdateDoc = updateDoc;
+        window.firebaseLoaded = true;
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        body { min-height: 100vh; background-color: #f5f5f5; color: #2c3e50; }
+        ::selection { background-color: #27ae60; color: #fff; }
+        .navbar { background-color: #2c3e50; padding: 15px 0; display: flex; justify-content: center; align-items: center; }
+        .navbar-brand { color: white !important; font-size: 24px; text-decoration: none; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .item { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); color: #2c3e50; }
+        .item-img-container { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background-color: #2c3e50; padding: 10px; border-radius: 8px; }
+        .item-img { max-width: 100%; height: 271.8px; object-fit: cover; border-radius: 10px; cursor: pointer; }
+        .item h2 { font-size: 20px; margin-bottom: 10px; }
+        .item p { font-size: 16px; margin: 5px 0; }
+        .bid-form { margin-top: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .btn-bid { background-color: #2c3e50; color: white; border: none; padding: 8px 15px; font-size: 14px; cursor: pointer; border-radius: 5px; transition: background-color 0.3s ease; }
+        .btn-bid:hover { background-color: #1e2a38; }
+        .btn-details { display: block; margin: 20px auto; padding: 1px 8px; background-color: #27ae60; color: white; text-decoration: none; border-radius: 5px; font-size: 16px; text-align: center; width: fit-content; }
+        .btn-details:hover { background-color: #219653; }
+        .winner { font-weight: bold; color: #27ae60; }
+        .bid-history { margin-top: 15px; border-collapse: collapse; width: 100%; }
+        .bid-history th, .bid-history td { border: 1px solid #ddd; padding: 8px; text-align: left; color: #2c3e50; }
+        .bid-history th { background-color: #2c3e50; color: white; }
+        .reset-button, .edit-button { background-color: #27ae60; border: none; color: white; padding: 8px 15px; font-size: 14px; cursor: pointer; border-radius: 5px; display: none; transition: background-color 0.3s ease; }
+        .reset-button:hover, .edit-button:hover { background-color: #219653; }
+        .bid-form input { padding: 8px; border-radius: 5px; border: 1px solid #ddd; color: #2c3e50; }
+        .bid-form input::placeholder { color: #7f8c8d; }
+        .unlock-input { width: 100px; }
+        .footer { background-color: #2c3e50; color: white; text-align: center; padding: 15px 0; margin-top: 20px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; }
+        .modal-content { max-width: 40%; max-height: 40%; border-radius: 8px; object-fit: contain; }
+        .close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: #ccc; }
+        @media (max-width: 768px) {
+            .modal-content { max-width: 80%; max-height: 80%; }
+            .item-img { width: 150px; height: 150px; }
+            .navbar { flex-direction: column; padding: 10px; }
+            .item { padding: 15px; }
+            .item h2 { font-size: 18px; }
+            .item p { font-size: 14px; }
+            .bid-form { flex-direction: column; gap: 5px; }
+            .bid-form input, .btn-bid, .reset-button, .edit-button { width: 100%; }
+            .unlock-input { width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .modal-content { max-width: 95%; max-height: 70%; }
+            .item-img { width: 100px; height: 100px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="#">กระดานประมูล ธนบัตร เหรียญ ที่ระลึก หนังสือ รหัส N2</a>
+    </nav>
+
+    <div class="container"></div>
+
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">×</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <footer class="footer">
+        <p>© 2025 ประมูลและขายพระเครื่อง. สงวนลิขสิทธิ์.</p>
+    </footer>
+
+    <script>
+        const UNLOCK_CODE = "999999";
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeMWOC3j-Cnv1e-5rLiAh8c6iFIdiZC2HY0paL4Dj-OQqNGqopcnWtwwDeKBdAwrXybk7bCFP7j7Js/pub?output=csv";
+        const CUSTOM_END_DATES = [
+            "2025-03-22", "2025-03-25", "2025-03-28", "2025-03-01", "2025-03-05",
+            "2025-03-10", "2025-03-15", "2025-03-20", "2025-03-25", "2025-03-30",
+            "2025-03-05", "2025-03-10", "2025-03-15", "2025-03-20", "2025-03-25",
+            "2025-03-30", "2025-03-04", "2025-03-09", "2025-03-14", "2025-03-19",
+            "2025-03-24", "2025-03-29", "2025-03-04", "2025-03-09", "2025-03-14",
+            "2025-03-19", "2025-03-24", "2025-03-29", "2025-03-03", "2025-03-08",
+            "2025-03-13", "2025-03-18", "2025-03-23", "2025-03-28", "2025-03-02",
+            "2025-03-07", "2025-03-12", "2025-03-17", "2025-04-22", "2025-03-27",
+            "2025-03-02", "2025-03-07", "2025-03-12", "2025-05-17", "2025-03-22",
+            "2025-03-27", "2025-03-01", "2025-03-06", "2025-06-11", "2025-03-16"
+        ];
+        let auctionData = [];
+
+        async function fetchAuctionData() {
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.text();
+                const rows = data.split("\n").slice(1);
+                auctionData = rows.map(row => {
+                    const [imageUrl1, imageUrl2, imageUrl3, auctioneer, amuletName, templeName, year, material, startPrice, shipping] = row.split(",").map(item => item.trim());
+                    return {
+                        images: [
+                            imageUrl1 && imageUrl1.startsWith("http") ? imageUrl1 : "https://via.placeholder.com/200",
+                            imageUrl2 && imageUrl2.startsWith("http") ? imageUrl2 : "https://via.placeholder.com/200",
+                            imageUrl3 && imageUrl3.startsWith("http") ? imageUrl3 : "https://via.placeholder.com/200"
+                        ],
+                        auctioneer: auctioneer || "ไม่ระบุ",
+                        amuletName: amuletName || "ไม่ระบุ",
+                        templeName: templeName || "ไม่ระบุ",
+                        year: year || "ไม่ระบุ",
+                        material: material || "ไม่ระบุ",
+                        startPrice: parseFloat(startPrice) || 50,
+                        shipping: parseFloat(shipping) || 20
+                    };
+                });
+                while (auctionData.length < 50) {
+                    auctionData.push({
+                        images: ["https://via.placeholder.com/200", "https://via.placeholder.com/200", "https://via.placeholder.com/200"],
+                        auctioneer: "ไม่ระบุ",
+                        amuletName: "ไม่ระบุ",
+                        templeName: "ไม่ระบุ",
+                        year: "ไม่ระบุ",
+                        material: "ไม่ระบุ",
+                        startPrice: 50,
+                        shipping: 20
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching auction data:", error);
+                auctionData = Array(50).fill({
+                    images: ["https://via.placeholder.com/200", "https://via.placeholder.com/200", "https://via.placeholder.com/200"],
+                    auctioneer: "ไม่ระบุ",
+                    amuletName: "ไม่ระบุ",
+                    templeName: "ไม่ระบุ",
+                    year: "ไม่ระบุ",
+                    material: "ไม่ระบุ",
+                    startPrice: 50,
+                    shipping: 20
+                });
+            }
+        }
+
+        function calculateEndDate(itemNumber) {
+            return CUSTOM_END_DATES[itemNumber - 1] || "2025-03-22";
+        }
+
+        function waitForFirebase() {
+            return new Promise(resolve => {
+                const check = () => window.firebaseLoaded ? resolve() : setTimeout(check, 100);
+                check();
+            });
+        }
+
+        function createAuctionItem(itemNumber, data, endDate, endTime, currentPrice) {
+            const safeImageUrls = data.images;
+            return `
+                <div class="item" id="item-${itemNumber}">
+                    <div class="item-img-container">
+                        <img src="${safeImageUrls[0]}" alt="${data.amuletName} ภาพที่ 1" class="item-img" onclick="openModal('${safeImageUrls[0]}')">
+                        <img src="${safeImageUrls[1]}" alt="${data.amuletName} ภาพที่ 2" class="item-img" onclick="openModal('${safeImageUrls[1]}')">
+                        <img src="${safeImageUrls[2]}" alt="${data.amuletName} ภาพที่ 3" class="item-img" onclick="openModal('${safeImageUrls[2]}')">
+                    </div>
+                    <p><b>ชื่อผู้ตั้งประมูล:</b> <span id="auctioneer${itemNumber}" contenteditable="false">${data.auctioneer}</span></p>
+                    <h2>ชื่อสินค้า รหัส N2: ${itemNumber}: <span id="amuletName${itemNumber}" contenteditable="false">${data.amuletName}</span></h2>
+                    <p><b>รายละเอียด:</b> <span id="templeName${itemNumber}" contenteditable="false">${data.templeName}</span></p>
+                    <p><b>ปีผลิตสินค้า:</b> <span id="year${itemNumber}" contenteditable="false">${data.year}</span></p>
+                    <p><b>สถานะสินค้า:</b> <span id="material${itemNumber}" contenteditable="false">${data.material}</span></p>
+                    <p><b>วันที่สิ้นสุด:</b> <span id="endDate${itemNumber}" contenteditable="false">${endDate}</span></p>
+                    <p><b>เวลาสิ้นสุด:</b> <span id="endTime${itemNumber}" contenteditable="false">${endTime}</span></p>
+                    <p><b>ระยะเวลาสิ้นสุด:</b> <span id="timeLeft${itemNumber}">คำนวณ...</span></p>
+                    <p><b>ราคาเริ่มต้น:</b> <span id="startPrice${itemNumber}" contenteditable="false">${data.startPrice}</span> บาท</p>
+                    <p><b>ราคาปัจจุบัน:</b> <span id="price${itemNumber}">${currentPrice}</span> บาท</p>
+                    <p><b>ค่าจัดส่ง:</b> <span id="shipping${itemNumber}" contenteditable="false">${data.shipping}</span> บาท</p>
+                    <p><b>ผู้ชนะการประมูล:</b> <span id="winner${itemNumber}">ยังไม่มีผู้ชนะ</span></p>
+                    <div class="bid-form">
+                        <input type="text" id="bidderName${itemNumber}" placeholder="IDผู้ประมูล" oninput="checkInputs(${itemNumber})">
+                        <input type="number" id="bidAmount${itemNumber}" placeholder="ราคาที่ต้องการประมูล">
+                        <button class="btn-bid" onclick="placeBid(${itemNumber})">ประมูล</button>
+                        <input type="text" id="unlockCode${itemNumber}" class="unlock-input" placeholder="ไม่ต้องกรอก" oninput="checkInputs(${itemNumber})">
+                        <button class="edit-button" id="editBtn${itemNumber}" onclick="toggleEdit(${itemNumber})">แก้ไข</button>
+                        <button class="btn-bid" id="saveBtn${itemNumber}" onclick="saveEdit(${itemNumber})" style="display:none">บันทึก</button>
+                        <button class="reset-button" id="resetButton${itemNumber}" onclick="resetAuctionItem(${itemNumber})">รีเซ็ตรายการนี้</button>
+                    </div>
+                    <h3>ประวัติการประมูล (5 ล่าสุด)</h3>
+                    <table class="bid-history" id="bidHistory${itemNumber}">
+                        <thead><tr><th>ชื่อผู้ประมูล</th><th>วันที่</th><th>เวลา</th><th>ราคา</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function initializeAuctionItems() {
+            await fetchAuctionData();
+            const container = document.querySelector('.container');
+            container.innerHTML = '<a href="https://script.google.com/macros/s/AKfycbxjHLcr1qgb7Q3yzJElNQ4gpsg0iyEV_-PeJIJvimNhNd23moc5sXgxi0TEOt8clqF9/exec" class="btn-details">กลับหน้า กระดานประมูล ธนบัตร เหรียญ ที่ระลึก หนังสือ รหัส N1</a>';
+            for (let i = 1; i <= 50; i++) {
+                const itemData = auctionData[i - 1];
+                const endDate = calculateEndDate(i);
+                container.innerHTML += createAuctionItem(i, itemData, endDate, "12:00", itemData.startPrice);
+            }
+        }
+
+        function openModal(imageSrc) {
+            document.getElementById("imageModal").style.display = "flex";
+            document.getElementById("modalImage").src = imageSrc;
+        }
+
+        function closeModal() {
+            document.getElementById("imageModal").style.display = "none";
+        }
+
+        window.onclick = event => {
+            if (event.target === document.getElementById("imageModal")) closeModal();
+        };
+
+        function checkInputs(itemNumber) {
+            const bidderName = document.getElementById(`bidderName${itemNumber}`).value.trim();
+            const unlockCode = document.getElementById(`unlockCode${itemNumber}`).value.trim();
+            const resetButton = document.getElementById(`resetButton${itemNumber}`);
+            const editButton = document.getElementById(`editBtn${itemNumber}`);
+
+            if (bidderName === UNLOCK_CODE || unlockCode === UNLOCK_CODE) {
+                editButton.style.display = "inline-block";
+                resetButton.style.display = "inline-block";
+            } else {
+                editButton.style.display = "none";
+                resetButton.style.display = "none";
+            }
+        }
+
+        async function placeBid(itemNumber) {
+            const endDate = document.getElementById(`endDate${itemNumber}`).innerText;
+            const endTime = document.getElementById(`endTime${itemNumber}`).innerText;
+            const endDateTime = new Date(`${endDate} ${endTime}`);
+            const now = new Date();
+            if (now > endDateTime) {
+                alert("การประมูลสิ้นสุดแล้ว กรุณารอรายการประมูลใหม่ (ขอบคุณ)");
+                return;
+            }
+
+            const bidderNameInput = document.getElementById(`bidderName${itemNumber}`);
+            const bidAmountInput = document.getElementById(`bidAmount${itemNumber}`);
+            const bidderName = bidderNameInput.value.trim();
+            const bidAmount = parseFloat(bidAmountInput.value);
+            const currentPrice = parseFloat(document.getElementById(`price${itemNumber}`).innerText);
+
+            if (!bidderName || isNaN(bidAmount)) return alert("กรุณากรอกชื่อและราคาประมูล");
+            if (bidAmount <= currentPrice) return alert("ราคาประมูลต้องสูงกว่าราคาปัจจุบัน");
+
+            document.getElementById(`price${itemNumber}`).innerText = bidAmount;
+            document.getElementById(`winner${itemNumber}`).innerText = bidderName;
+            document.getElementById(`winner${itemNumber}`).classList.add("winner");
+            addBidToHistory(itemNumber, bidderName, bidAmount);
+            alert("ประมูลสำเร็จ!");
+            bidderNameInput.value = "";
+            bidAmountInput.value = "";
+            checkInputs(itemNumber);
+            await saveBidToFirestore(itemNumber);
+        }
+
+        function addBidToHistory(itemNumber, bidderName, bidAmount) {
+            const table = document.getElementById(`bidHistory${itemNumber}`).getElementsByTagName('tbody')[0];
+            const now = new Date();
+            const newRow = table.insertRow(0);
+            newRow.insertCell(0).innerHTML = bidderName;
+            newRow.insertCell(1).innerHTML = now.toLocaleDateString();
+            newRow.insertCell(2).innerHTML = now.toLocaleTimeString();
+            newRow.insertCell(3).innerHTML = bidAmount;
+            if (table.rows.length > 5) table.deleteRow(5);
+        }
+
+        function updateTimeLeft() {
+            for (let i = 1; i <= 50; i++) {
+                const endDate = document.getElementById(`endDate${i}`).innerText;
+                const endTime = document.getElementById(`endTime${i}`).innerText;
+                const endDateTime = new Date(`${endDate} ${endTime}`);
+                const now = new Date();
+                const timeLeft = endDateTime - now;
+
+                if (timeLeft > 0) {
+                    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    document.getElementById(`timeLeft${i}`).innerText = `${days} วัน ${hours} ชม. ${minutes} นาที ${seconds} วินาที`;
+                } else {
+                    document.getElementById(`timeLeft${i}`).innerText = "สิ้นสุดการประมูลแล้ว";
+                }
+            }
+        }
+
+        async function resetAuctionItem(itemNumber) {
+            document.getElementById(`price${itemNumber}`).innerText = document.getElementById(`startPrice${itemNumber}`).innerText;
+            document.getElementById(`winner${itemNumber}`).innerText = "ยังไม่มีผู้ชนะ";
+            document.getElementById(`winner${itemNumber}`).classList.remove("winner");
+            document.getElementById(`bidHistory${itemNumber}`).getElementsByTagName('tbody')[0].innerHTML = "";
+            document.getElementById(`bidderName${itemNumber}`).value = "";
+            document.getElementById(`bidAmount${itemNumber}`).value = "";
+            document.getElementById(`unlockCode${itemNumber}`).value = "";
+            document.getElementById(`resetButton${itemNumber}`).style.display = "none";
+            document.getElementById(`editBtn${itemNumber}`).style.display = "none";
+            await saveBidToFirestore(itemNumber);
+        }
+
+        async function saveBidToFirestore(itemNumber) {
+            const docRef = window.firestoreDoc(window.db, 'auctionItems', 'item' + itemNumber);
+            const itemData = {
+                auctioneer: document.getElementById(`auctioneer${itemNumber}`).innerText,
+                amuletName: document.getElementById(`amuletName${itemNumber}`).innerText,
+                templeName: document.getElementById(`templeName${itemNumber}`).innerText,
+                year: document.getElementById(`year${itemNumber}`).innerText,
+                material: document.getElementById(`material${itemNumber}`).innerText,
+                endDate: document.getElementById(`endDate${itemNumber}`).innerText,
+                endTime: document.getElementById(`endTime${itemNumber}`).innerText,
+                startPrice: document.getElementById(`startPrice${itemNumber}`).innerText,
+                currentPrice: document.getElementById(`price${itemNumber}`).innerText,
+                shipping: document.getElementById(`shipping${itemNumber}`).innerText,
+                winner: document.getElementById(`winner${itemNumber}`).innerText,
+                bidHistory: getBidHistory(itemNumber)
+            };
+            try {
+                await window.firestoreSetDoc(docRef, itemData, { merge: true });
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการบันทึก:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        }
+
+        function getBidHistory(itemNumber) {
+            const table = document.getElementById(`bidHistory${itemNumber}`).getElementsByTagName('tbody')[0];
+            const history = [];
+            for (let i = 0; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                history.push({
+                    bidderName: row.cells[0].innerHTML,
+                    date: row.cells[1].innerHTML,
+                    time: row.cells[2].innerHTML,
+                    price: row.cells[3].innerHTML
+                });
+            }
+            return history;
+        }
+
+        function toggleEdit(itemNumber) {
+            const fields = [`auctioneer${itemNumber}`, `amuletName${itemNumber}`, `templeName${itemNumber}`, `year${itemNumber}`, `material${itemNumber}`, `endDate${itemNumber}`, `endTime${itemNumber}`, `startPrice${itemNumber}`, `shipping${itemNumber}`];
+            fields.forEach(field => {
+                document.getElementById(field).contentEditable = "true";
+                document.getElementById(field).style.backgroundColor = "#f0f0f0";
+            });
+            document.getElementById(`editBtn${itemNumber}`).style.display = "none";
+            document.getElementById(`saveBtn${itemNumber}`).style.display = "inline-block";
+        }
+
+        async function saveEdit(itemNumber) {
+            const fields = [`auctioneer${itemNumber}`, `amuletName${itemNumber}`, `templeName${itemNumber}`, `year${itemNumber}`, `material${itemNumber}`, `endDate${itemNumber}`, `endTime${itemNumber}`, `startPrice${itemNumber}`, `shipping${itemNumber}`];
+            fields.forEach(field => {
+                document.getElementById(field).contentEditable = "false";
+                document.getElementById(field).style.backgroundColor = "transparent";
+            });
+            document.getElementById(`editBtn${itemNumber}`).style.display = "none";
+            document.getElementById(`saveBtn${itemNumber}`).style.display = "none";
+            await saveEditedDataToFirestore(itemNumber);
+        }
+
+        async function saveEditedDataToFirestore(itemNumber) {
+            const docRef = window.firestoreDoc(window.db, 'auctionItems', 'item' + itemNumber);
+            const itemData = {
+                auctioneer: document.getElementById(`auctioneer${itemNumber}`).innerText,
+                amuletName: document.getElementById(`amuletName${itemNumber}`).innerText,
+                templeName: document.getElementById(`templeName${itemNumber}`).innerText,
+                year: document.getElementById(`year${itemNumber}`).innerText,
+                material: document.getElementById(`material${itemNumber}`).innerText,
+                endDate: document.getElementById(`endDate${itemNumber}`).innerText,
+                endTime: document.getElementById(`endTime${itemNumber}`).innerText,
+                startPrice: document.getElementById(`startPrice${itemNumber}`).innerText,
+                currentPrice: document.getElementById(`price${itemNumber}`).innerText,
+                shipping: document.getElementById(`shipping${itemNumber}`).innerText,
+                winner: document.getElementById(`winner${itemNumber}`).innerText,
+                bidHistory: getBidHistory(itemNumber)
+            };
+            try {
+                await window.firestoreSetDoc(docRef, itemData, { merge: true });
+                alert('บันทึกการแก้ไขสำเร็จ');
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการบันทึก:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        }
+
+        async function loadBidFromFirestore() {
+            for (let i = 1; i <= 50; i++) {
+                const docRef = window.firestoreDoc(window.db, 'auctionItems', 'item' + i);
+                window.firestoreOnSnapshot(docRef, (docSnap) => {
+                    const item = docSnap.data();
+                    const defaultValues = auctionData[i - 1];
+                    const defaultEndDate = calculateEndDate(i);
+                    const elements = {
+                        auctioneer: document.getElementById(`auctioneer${i}`),
+                        amuletName: document.getElementById(`amuletName${i}`),
+                        templeName: document.getElementById(`templeName${i}`),
+                        year: document.getElementById(`year${i}`),
+                        material: document.getElementById(`material${i}`),
+                        endDate: document.getElementById(`endDate${i}`),
+                        endTime: document.getElementById(`endTime${i}`),
+                        startPrice: document.getElementById(`startPrice${i}`),
+                        price: document.getElementById(`price${i}`),
+                        shipping: document.getElementById(`shipping${i}`),
+                        winner: document.getElementById(`winner${i}`),
+                        table: document.getElementById(`bidHistory${i}`)?.getElementsByTagName('tbody')[0]
+                    };
+
+                    if (!elements.auctioneer || !elements.price) return;
+
+                    if (item) {
+                        elements.auctioneer.innerText = item.auctioneer || defaultValues.auctioneer;
+                        elements.amuletName.innerText = item.amuletName || defaultValues.amuletName;
+                        elements.templeName.innerText = item.templeName || defaultValues.templeName;
+                        elements.year.innerText = item.year || defaultValues.year;
+                        elements.material.innerText = item.material || defaultValues.material;
+                        elements.endDate.innerText = item.endDate || defaultEndDate;
+                        elements.endTime.innerText = item.endTime || "12:00";
+                        elements.startPrice.innerText = item.startPrice || defaultValues.startPrice;
+                        elements.price.innerText = item.currentPrice || defaultValues.startPrice;
+                        elements.shipping.innerText = item.shipping || defaultValues.shipping;
+                        elements.winner.innerText = item.winner || "ยังไม่มีผู้ชนะ";
+                        elements.winner.classList.toggle("winner", item.winner && item.winner !== "ยังไม่มีผู้ชนะ");
+                        if (elements.table) {
+                            elements.table.innerHTML = "";
+                            if (item.bidHistory?.length) {
+                                item.bidHistory.reverse().forEach(bid => {
+                                    const row = elements.table.insertRow(-1);
+                                    row.insertCell(0).innerHTML = bid.bidderName || '';
+                                    row.insertCell(1).innerHTML = bid.date || '';
+                                    row.insertCell(2).innerHTML = bid.time || '';
+                                    row.insertCell(3).innerHTML = bid.price || '';
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        async function initializeApp() {
+            await waitForFirebase();
+            await initializeAuctionItems();
+            await loadBidFromFirestore();
+            updateTimeLeft();
+            setInterval(updateTimeLeft, 1000);
+            for (let i = 1; i <= 50; i++) {
+                document.getElementById(`resetButton${i}`).style.display = "none";
+                document.getElementById(`editBtn${i}`).style.display = "none";
+                document.getElementById(`saveBtn${i}`).style.display = "none";
+                document.getElementById(`bidderName${i}`).value = "";
+                document.getElementById(`unlockCode${i}`).value = "";
+            }
+        }
+
+        window.onload = () => initializeApp();
+    </script>
+</body>
+</html>
